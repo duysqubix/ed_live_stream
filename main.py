@@ -20,24 +20,56 @@ class Rarity(IntEnum):
     uncommon = 2
     rare = 3
     very_rare = 4
+    unknown = 5
     
-    def colorize(self, msg):
+    def colorize(self):
         
         if self == Rarity.uncommon:
-            return Fore.BLUE + msg + Fore.RESET
+            return Fore.CYAN + "uncommon" + Fore.RESET
         
         if self == Rarity.rare:
-            return Fore.RED + msg + Fore.RESET
+            return Fore.RED + "rare" + Fore.RESET
         
         if self == Rarity.very_rare:
-            return Fore.YELLOW + msg + Fore.RESET
-        return msg
-    
+            return Fore.YELLOW + "very rare" + Fore.RESET
+        if self == Rarity.common:
+            return "common"
+        if self == Rarity.very_common:
+            return "very common"
+
+        return "Unknown"    
+
 RARITY = {
     "O (Blue-White) Star" : [Rarity.very_common, Rarity.very_rare],
     "B (Blue-White) Star" : [Rarity.very_common, Rarity.rare],
     "B (Blue-White super giant) Star" : [Rarity.very_rare, Rarity.very_rare],
     "A (Blue-White) Star": [Rarity.very_common, Rarity.uncommon],
+    "A (Blue-White super giant) Star": [Rarity.very_rare, Rarity.uncommon],
+    "F (White) Star": [Rarity.very_common, Rarity.common],
+    "F (White super giant) Star": [Rarity.very_rare, Rarity.rare],
+    "G (White-Yellow) Star": [Rarity.very_common, Rarity.common],
+    "G (White-Yellow super giant) Star": [Rarity.very_rare, Rarity.rare],
+    "K (Yellow-Orange) Star": [Rarity.very_common, Rarity.common],
+    "K (Yellow-Orange super giant) Star": [Rarity.very_rare, Rarity.common],
+    "M (Red dwarf) Star": [Rarity.very_common, Rarity.very_common],
+    "M (Red giant) Star": [Rarity.very_common, Rarity.very_common],
+    "M (Red super giant) Star": [Rarity.very_rare, Rarity.rare],
+    "L (Brown dwarf) Star" : [Rarity.common, Rarity.very_common],
+    "T (Brown dwarf) Star": [Rarity.common, Rarity.common],
+    "Y (Brown dwarf) Star": [Rarity.common, Rarity.common],
+    "T Tauri Star": [Rarity.rare, Rarity.very_common],
+    "Herbig Ae/Be Star": [Rarity.rare, Rarity.rare],
+    "Wolf-Rayet Star": [Rarity.very_rare, Rarity.very_rare],
+    "Wolf-Rayet C Star": [Rarity.very_rare, Rarity.common],
+    "Wolf-Rayet N Star": [Rarity.very_rare, Rarity.common],
+    "Wolf-Rayet NC Star": [Rarity.very_rare, Rarity.common],
+    "Wolf-Rayet O Star": [Rarity.very_rare, Rarity.very_common],
+    "C Star": [Rarity.very_rare, Rarity.very_rare],
+    "CJ Star": [Rarity.very_rare, Rarity.rare],
+    "CN Star": [Rarity.very_rare, Rarity.common],
+    "MS-type Star": [Rarity.very_rare, Rarity.very_common],
+    "S-type Star": [Rarity.very_rare, Rarity.very_common],
+    "unknown": [Rarity.unknown, Rarity.unknown]
     
 }
 
@@ -180,17 +212,10 @@ class Commander:
         resp = requests.get(url, params=data)
         return resp.json()
 
-    def distance_to_sol(self, position=None, r=2):
-        if not position:
-            position = self.position
-
-        dist = distance(position.x, 0, position.y, 0, position.z, 0)
-        return round(dist, 2)
-
     def live_stream(self):
         report = \
        "\tSystem: {} ({}: {} ly)\n" \
-       "\tStar: {} ({})\n" \
+       "\tStar: {} ({}/{}) ({})\n" \
        "\tTotal Dist: {} ly\n\n" \
        "\t{}" \
        "------------------------------------------------------------"
@@ -226,8 +251,12 @@ class Commander:
                         info_content = ""
                         for k, v in info.items():
                             info_content += f"\t{k}:\t{v}\n"
+                    rarity = RARITY.get('star_name', Rarity.Unknown)
+
                     fin_report = report.format(sys_name, self.home, to_home, star_type,
                                                scoopable,
+                                               rarity[0].colorize(),
+                                               rarity[1].colorize(),
                                                round(self.total_distance,2), info_content)
 
                     print(fin_report)
